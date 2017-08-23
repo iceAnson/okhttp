@@ -229,12 +229,20 @@ public final class RealConnection extends FramedConnection.Listener implements C
       // Create the wrapper over the connected socket.
       sslSocket = (SSLSocket) sslSocketFactory.createSocket(
           rawSocket, address.url().host(), address.url().port(), true /* autoClose */);
+      //加入的代码start
+      //获取请求头中的host
+      String host = address.host();
+      if (host == null || host.length() == 0) {
+        //如果请求中的host为空，则使用url中的host
+        host = address.url().host();
+      }
+      //加入的代码end
 
       // Configure the socket's ciphers, TLS versions, and extensions.
       ConnectionSpec connectionSpec = connectionSpecSelector.configureSecureSocket(sslSocket);
       if (connectionSpec.supportsTlsExtensions()) {
         Platform.get().configureTlsExtensions(
-            sslSocket, address.url().host(), address.protocols());
+            sslSocket, host, address.protocols());
       }
 
       // Force handshake. This can throw!
@@ -242,16 +250,16 @@ public final class RealConnection extends FramedConnection.Listener implements C
       Handshake unverifiedHandshake = Handshake.get(sslSocket.getSession());
 
       // Verify that the socket's certificates are acceptable for the target host.
-      if (!address.hostnameVerifier().verify(address.url().host(), sslSocket.getSession())) {
+      if (!address.hostnameVerifier().verify(host, sslSocket.getSession())) {
         X509Certificate cert = (X509Certificate) unverifiedHandshake.peerCertificates().get(0);
-        throw new SSLPeerUnverifiedException("Hostname " + address.url().host() + " not verified:"
+        throw new SSLPeerUnverifiedException("Hostname " + host + " not verified:"
             + "\n    certificate: " + CertificatePinner.pin(cert)
             + "\n    DN: " + cert.getSubjectDN().getName()
             + "\n    subjectAltNames: " + OkHostnameVerifier.allSubjectAltNames(cert));
       }
 
       // Check that the certificate pinner is satisfied by the certificates presented.
-      address.certificatePinner().check(address.url().host(),
+      address.certificatePinner().check(host,
           unverifiedHandshake.peerCertificates());
 
       // Success! Save the handshake and the ALPN protocol.

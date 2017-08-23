@@ -153,11 +153,18 @@ public final class Http2xStream implements HttpStream {
    */
   public static List<Header> spdy3HeadersList(Request request) {
     Headers headers = request.headers();
+    //加入的代码start
+    //先取header中的host
+    String host = request.header("host");
+    if (host == null || host.length() == 0) {
+      //没有则使用原始的request.url()
+      host = Util.hostHeader(request.url(), false);
+    }
     List<Header> result = new ArrayList<>(headers.size() + 5);
     result.add(new Header(TARGET_METHOD, request.method()));
     result.add(new Header(TARGET_PATH, RequestLine.requestPath(request.url())));
     result.add(new Header(VERSION, "HTTP/1.1"));
-    result.add(new Header(TARGET_HOST, Util.hostHeader(request.url(), false)));
+    result.add(new Header(TARGET_HOST, host));
     result.add(new Header(TARGET_SCHEME, request.url().scheme()));
 
     Set<ByteString> names = new LinkedHashSet<>();
@@ -193,10 +200,18 @@ public final class Http2xStream implements HttpStream {
 
   public static List<Header> http2HeadersList(Request request) {
     Headers headers = request.headers();
+    //加入的代码start
+    //先取header中的host
+    String host = request.header("host");
+    if (host == null || host.length() == 0) {
+      //没有则使用原始的request.url()
+      host = Util.hostHeader(request.url(), false);
+    }
+    //加入的代码end
     List<Header> result = new ArrayList<>(headers.size() + 4);
     result.add(new Header(TARGET_METHOD, request.method()));
     result.add(new Header(TARGET_PATH, RequestLine.requestPath(request.url())));
-    result.add(new Header(TARGET_AUTHORITY, Util.hostHeader(request.url(), false))); // Optional.
+    result.add(new Header(TARGET_AUTHORITY,host)); // Optional.
     result.add(new Header(TARGET_SCHEME, request.url().scheme()));
 
     for (int i = 0, size = headers.size(); i < size; i++) {

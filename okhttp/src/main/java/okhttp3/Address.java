@@ -47,8 +47,13 @@ public final class Address {
   final HostnameVerifier hostnameVerifier;
   final CertificatePinner certificatePinner;
 
-  public Address(String uriHost, int uriPort, Dns dns, SocketFactory socketFactory,
-      SSLSocketFactory sslSocketFactory, HostnameVerifier hostnameVerifier,
+  String headerHost=null;
+  public String host() {
+    return headerHost;
+  }
+  public Address(String uriHost,String headerHost, int uriPort, Dns dns, SocketFactory socketFactory,
+
+                 SSLSocketFactory sslSocketFactory, HostnameVerifier hostnameVerifier,
       CertificatePinner certificatePinner, Authenticator proxyAuthenticator, Proxy proxy,
       List<Protocol> protocols, List<ConnectionSpec> connectionSpecs, ProxySelector proxySelector) {
     this.url = new HttpUrl.Builder()
@@ -81,6 +86,8 @@ public final class Address {
     this.sslSocketFactory = sslSocketFactory;
     this.hostnameVerifier = hostnameVerifier;
     this.certificatePinner = certificatePinner;
+    this.headerHost = headerHost;
+
   }
 
   /**
